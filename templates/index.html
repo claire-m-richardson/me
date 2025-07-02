@@ -1,0 +1,547 @@
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Claire Richardson</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <style>
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Times New Roman', serif;
+      background-color: #f0f0f0;
+      color: #1a1a1a;
+      cursor: none;
+    }
+    #custom-cursor {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 20px;
+      height: 20px;
+      background: rgba(0, 0, 0, 0.8);
+      border-radius: 50%;
+      pointer-events: none;
+      transform: translate(-50%, -50%) scale(1);
+      transition: transform 0.15s ease;
+      z-index: 9999;
+    }
+    .cursor-trail {
+      position: fixed;
+      width: 12px;
+      height: 12px;
+      background: rgba(0, 0, 0, 0.4);
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 9998;
+      animation: fadeTrail 0.5s linear forwards;
+    }
+    @keyframes fadeTrail {
+      from { opacity: 1; }
+      to { opacity: 0; transform: scale(1.5); }
+    }
+    .popup-carousel {
+      max-width: 250px;
+      text-align: center;
+    }
+    .carousel-img {
+      width: 100%;
+      height: auto;
+      border-radius: 6px;
+      margin-bottom: 10px;
+    }
+    .carousel-controls button {
+      margin: 0 5px;
+      padding: 4px 8px;
+      font-size: 1rem;
+      background: #ddd;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    section {
+      padding: 30px 20px;
+      max-width: 1000px;
+      margin: auto;
+      min-height: 70vh;
+      position: relative;
+      animation: fadeIn 1s ease-in;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    h1, h2 {
+      text-align: center;
+      font-weight: bold;
+      margin-bottom: 20px;
+    }
+    .header-banner {
+      width: 100%;
+      height: 300px;
+      background: url('/static/banner-art.JPG') center center no-repeat;
+      background-size: cover;
+      background-repeat: no-repeat;
+      background-position: center;
+      text-align: center;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2rem;
+      font-weight: bold;
+    }
+    .project-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+    }
+    .project-block {
+      background: rgb(236, 220, 202);
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .project-block:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+    .book-section {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 30px;
+      padding: 0 10px;
+    }
+    .book-card {
+      width: 150px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      padding: 10px;
+      background: rgb(236, 220, 202);
+      border-radius: 8px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+    }
+    .book-card img {
+      width: 100%;
+      height: auto;
+      border-radius: 4px;
+      object-fit: contain;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+      margin-bottom: 10px;
+    }
+    .book-text {
+      flex: 1;
+      font-size: 0.85rem;
+      min-height: 60px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .gallery-container { height: 500px; }
+    #map {
+      height: 100%;
+      width: 100%;
+      border-radius: 8px;
+    }
+    .navbar {
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+      background-color: transparent;
+      position: fixed;
+      bottom: 20px;
+      left: 0;
+      width: 100%;
+      z-index: 100;
+    }
+    .navbar a {
+      padding: 10px 18px;
+      background: white;
+      border-radius: 10px;
+      color: #333;
+      font-size: 1rem;
+      text-decoration: none;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+      transition: all 0.3s ease;
+    }
+    .navbar a:hover {
+      background: #ddd;
+      color: #000;
+    }
+    .scroll-top {
+      position: fixed;
+      right: 20px;
+      bottom: 100px;
+      background: rgb(192, 151, 76);
+      color: white;
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      border: none;
+      cursor: pointer;
+    }
+    hr.section-breaker {
+      border: none;
+      border-top: 3px dotted #555;
+      margin: 40px auto;
+      width: 70%;
+    }
+    .embed-pdf {
+      width: 100%;
+      height: 500px;
+      border: none;
+      margin-top: 10px;
+    }
+    .copy-btn {
+      margin-left: 10px;
+      padding: 4px 8px;
+      font-size: 0.85rem;
+      border-radius: 6px;
+      background: #ccc;
+      cursor: pointer;
+      border: none;
+    }
+    .project-block img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 6px;
+  object-fit: contain;
+  margin-top: 10px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+}
+.section-box {
+  background: rgb(236, 220, 202);
+  padding: 30px;
+  margin: 30px auto;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  max-width: 1000px;
+}
+
+
+  </style>
+</head>
+<body>
+
+<div id="custom-cursor"></div>
+<div class="header-banner"></div>
+
+<section id="about">
+  <h1>Claire Richardson</h1>
+  <p style="text-align:center">a second year student <a href="https://www.utoronto.ca" target="_blank">@uoft</a> trying to find what she enjoys</p>
+  <p style="text-align:center">where do my interests lie?</p>
+</section>
+
+<hr class="section-breaker">
+
+<section id="work">
+  <h2>projects</h2>
+  <div class="project-grid">
+    <div class="project-block">
+  <h3><strong>evaluating overheating risks in multi-residential apartments</strong></h3>
+  <p>my research paper on thermal comfort: inspired to develop findings into a usable software.<br>
+    <a href="/static/OverheatingPaper.pdf" target="_blank">take a read!</a>
+
+
+  <img src="/static/paperoverview.png" alt="Paper Overview Screenshot">
+</div>
+
+    <div class="project-block">
+      <h3><strong>stabilizing tremors: improving quality of life of patients living with Parkinson's</strong></h3>
+      <p>previously on: hardware subteam <a href="https://www.linkedin.com/company/neurotechuoft/posts/?feedView=all" target="_blank">@neurotech</a>.</p>
+      <div class="carousel">
+        <img id="carousel-img" src="/static/neurotech/0C807F35-F575-48C1-9600-4AF43A3DC11D.jpg" alt="Slide">
+        <div class="carousel-controls">
+          <button onclick="prevSlide()">←</button>
+          <button onclick="nextSlide()">→</button>
+        </div>
+      </div>
+    </div>
+    <div class="project-block">
+      <h3><strong>🏎️ formula one: a brake down - in progress</strong></h3>
+      <p>zoom zoom.</p>
+
+
+      <img src="/static/formulaone.jpg">
+      <img src="/static/formulaone1.jpeg">
+    </div>
+    <div class="project-block">
+      <h3><strong>30 days of solidworks - in progress</strong></h3>
+      <p>a challenge to complete a 3D sketch a day: improving technical skills.</p>
+    </div>
+    <div class="project-block">
+      <h3><strong>UWC x UofT</strong></h3>
+      <p>co-president: bringing alumni together</p>
+      <p>check out our website: <a href="https://www.uwc.org/" target="_blank">@club</a> </p>
+    </div>
+  </div>
+</section>
+
+<hr class="section-breaker">
+
+<section id="books">
+  <h2>reads to remember</h2>
+  <div class="book-section">
+    <div class="book-section">
+      <div class="book-card">
+        <img src="/static/book1.jpg" alt="Book Cover">
+        <div class="book-text">
+          <h3>James</h3>
+          <p>Percival Everett</p>
+        </div>
+      </div>
+      <div class="book-card">
+        <img src="/static/book2.jpg" alt="Book Cover">
+        <div class="book-text">
+          <h3>Flowers for Algernon</h3>
+          <p>Daniel Keyes</p>
+        </div>
+      </div>
+      <div class="book-card">
+        <img src="/static/book3.jpg" alt="Book Cover">
+        <div class="book-text">
+          <h3>All Fours</h3>
+          <p>Miranda July</p>
+        </div>
+      </div>
+      <div class="book-card">
+        <img src="/static/book4.jpg" alt="Book Cover">
+        <div class="book-text">
+          <h3>Aventures of Huckleberry Finn</h3>
+          <p>Mark Twain</p>
+        </div>
+      </div>
+      <div class="book-card">
+        <img src="/static/book5.jpg" alt="Book Cover">
+        <div class="book-text">
+          <h3>Boulder</h3>
+          <p>Eva Baltasar</p>
+        </div>
+      </div>
+      <div class="book-card">
+        <img src="/static/book6.jpg" alt="Book Cover">
+        <div class="book-text">
+          <h3>The Awakening</h3>
+          <p>Kate Chopin</p>
+        </div>
+      </div>
+      <div class="book-card">
+        <img src="/static/book7.jpg" alt="Book Cover">
+        <div class="book-text">
+          <h3>The Safe Keep</h3>
+          <p>Yael Van Der Wouden</p>
+        </div>
+      </div>
+      <div class="book-card">
+        <img src="/static/book8.jpg" alt="Book Cover">
+        <div class="book-text">
+          <h3>Orbital</h3>
+          <p>Samantha Harvey</p>
+        </div>
+      </div>
+  </div>
+</section>
+
+<hr class="section-breaker">
+<section id="visual">
+  <div class="section-box">
+    <h2>visual diary</h2>
+    <div class="gallery-container">
+      <div id="map"></div>
+    </div>
+  </div>
+</section>
+
+
+<hr class="section-breaker">
+<section id="reachout">
+  <div class="section-box">
+    <h2>send me a message!</h2>
+    <div class="contact">
+      <p><strong>contact</strong></p>
+      <p>personal email: 
+        <span id="personal-email">clairerichardson246@gmail.com</span>
+        <button class="copy-btn" onclick="copyToClipboard('clairerichardson246@gmail.com')">copy</button>
+      </p>
+      <p>school email: 
+        <span id="school-email">clairem.richardson@mail.utoronto.ca</span>
+        <button class="copy-btn" onclick="copyToClipboard('clairem.richardson@mail.utoronto.ca')">copy</button>
+      </p>
+      <p>linkedIn: 
+        <a href="https://www.linkedin.com/in/claire-richardson-a8a043267" target="_blank">@claire-richardson</a>
+      </p>
+    </div>
+  </div>
+</section>
+
+
+<div class="navbar">
+  <a href="#about">home</a>
+  <a href="#work">work</a>
+  <a href="#books">books</a>
+  <a href="#visual">visual diary</a>
+  <a href="#reachout">reach out</a>
+</div>
+
+<button class="scroll-top" onclick="window.scrollTo({top: 0, behavior: 'smooth'})">↑ top</button>
+
+<script>
+  function copyToClipboard(text) {
+    navigator.clipboard.writeText(text).then(() => {
+      alert('Copied: ' + text);
+    });
+  }
+
+  const cursor = document.getElementById('custom-cursor');
+  document.addEventListener('mousemove', e => {
+    cursor.style.top = e.clientY + 'px';
+    cursor.style.left = e.clientX + 'px';
+
+    const trail = document.createElement('div');
+    trail.className = 'cursor-trail';
+    trail.style.top = e.clientY + 'px';
+    trail.style.left = e.clientX + 'px';
+    document.body.appendChild(trail);
+    setTimeout(() => document.body.removeChild(trail), 500);
+  });
+
+  document.addEventListener('mousedown', () => {
+    cursor.style.transform = 'translate(-50%, -50%) scale(2)';
+  });
+  document.addEventListener('mouseup', () => {
+    cursor.style.transform = 'translate(-50%, -50%) scale(1)';
+  });
+
+  const imagePaths = [
+    "/static/neurotech/0C807F35-F575-48C1-9600-4AF43A3DC11D.jpg",
+    "/static/neurotech/4C6C756C-D3DB-4D1D-9514-63AED539E9CE.jpg",
+    "/static/neurotech/83DD83E5-D3FD-41A2-942D-EF03083C8AFB.jpg",
+    "/static/neurotech/574B0126-F435-4B3A-9BF9-10407DD6E7D0.jpg",
+    "/static/neurotech/748FEC1D-A3A4-4C39-ADCF-DF77EC2EFB61.jpg",
+    "/static/neurotech/24048856-9D32-480A-8FF3-CCABE75746F6.jpg",
+    "/static/neurotech/ED09804F-62A6-4E52-B25A-7F77F0533BEB.jpg"
+  ];
+  let currentIndex = 0;
+  const carouselImg = document.getElementById("carousel-img");
+
+  function updateImage() {
+    carouselImg.src = imagePaths[currentIndex];
+  }
+  function nextSlide() {
+    currentIndex = (currentIndex + 1) % imagePaths.length;
+    updateImage();
+  }
+  function prevSlide() {
+    currentIndex = (currentIndex - 1 + imagePaths.length) % imagePaths.length;
+    updateImage();
+  }
+
+  const map = L.map('map').setView([43.65107, -79.347015], 2);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; OpenStreetMap contributors'
+  }).addTo(map);
+
+  const destinations = [
+    {
+        lat: 43.65107,
+        lng: -79.347015,
+        label: 'toronto, on',
+        images: ['/static/toronto1.jpg', '/static/toronto2.jpg', '/static/toronto3.jpg', '/static/toronto4.jpg', '/static/toronto5.jpg', '/static/toronto6.jpg', '/static/toronto7.jpg', '/static/toronto8.jpg', '/static/toronto9.jpg', '/static/toronto10.jpg', '/static/toronto11.jpeg', '/static/toronto12.jpeg', '/static/toronto13.jpeg', '/static/toronto14.jpeg', '/static/toronto15.jpeg', '/static/toronto16.jpg', '/static/toronto17.jpg', '/static/toronto18.jpg', '/static/toronto19.jpg', '/static/toronto20.jpg', '/static/toronto21.jpg']
+      },
+      {
+        lat: 50.26729000,
+        lng: -119.27337000,
+        label: 'vernon, bc',
+        images: ['/static/vernon1.jpeg', '/static/vernon2.jpeg', '/static/vernon3.jpeg', '/static/vernon4.jpeg', '/static/vernon5.jpeg', '/static/vernon6.jpeg', '/static/vernon7.jpeg', '/static/vernon8.jpeg', '/static/vernon9.jpeg', '/static/vernon10.jpeg', '/static/vernon11.jpeg', '/static/vernon12.jpeg']
+      },
+      {
+        lat: 23.27663000,
+        lng: -109.75322000,
+        label: 'los cabos, mexico',
+        images: ['/static/loscabos1.jpg', '/static/loscabos2.jpg', '/static/loscabos3.jpg', '/static/loscabos4.jpg', '/static/loscabos5.heic', '/static/loscabos6.heic', '/static/loscabos7.heic', '/static/loscabos8.heic', '/static/loscabos9.heic']
+      },
+      {
+        lat: 61.3154,
+        lng: 5.3634,
+        label: 'flekke, norway',
+        images: ['/static/norway1.jpg', '/static/norway2.jpg', '/static/norway3.jpg','/static/norway4.jpg', '/static/norway5.jpg', '/static/norway6.jpg', '/static/norway7.jpg', '/static/norway8.jpg', '/static/norway9.jpg', '/static/norway10.jpg', '/static/norway11.jpeg', '/static/norway12.jpeg', '/static/norway13.jpeg','/static/norway14.jpeg', '/static/norway15.jpeg', '/static/norway16.jpeg', '/static/norway17.jpeg', '/static/norway18.jpeg', '/static/norway19.jpeg', '/static/norway20.jpeg', '/static/norway21.jpeg', '/static/norway22.jpeg', '/static/norway23.jpeg','/static/norway24.jpeg', '/static/norway25.jpeg', '/static/norway26.jpeg', '/static/norway27.jpeg', '/static/norway28.jpeg', '/static/norway29.jpeg', '/static/norway30.jpeg', '/static/norway31.jpeg', '/static/norway32.jpeg', '/static/norway33.jpeg','/static/norway34.jpeg', '/static/norway35.jpeg', '/static/norway36.jpeg', '/static/norway37.jpeg']
+      },
+      {
+        lat: 52.37403000,
+        lng: 4.88969000,
+        label: 'amsterdam, netherlands',
+        images: ['/static/amsterdam1.jpg', '/static/amsterdam2.jpg', '/static/amsterdam3.jpg', '/static/amsterdam4.heic']
+      },
+      {
+        lat: 41.90278,
+        lng: 12.49637,
+        label: 'rome, italy',
+        images: ['/static/rome1.jpg', '/static/rome2.jpg', '/static/rome3.jpg', '/static/rome4.heic', '/static/rome5.jpg', '/static/rome6.jpg', '/static/rome7.jpg']
+      },
+      {
+        lat: 55.67594,
+        lng: 12.565530,
+        label: 'copenhagen, denmark',
+        images: ['/static/copenhagen1.heic', '/static/copenhagen2.heic', '/static/copenhagen3.heic', '/static/copenhagen4.heic', '/static/copenhagen5.heic', '/static/copenhagen6.heic']
+      },
+      {
+        lat: 51.180202,
+        lng: -115.565704,
+        label: 'banff, alberta',
+        images: ['/static/banff1.jpg', '/static/banff2.jpg', '/static/banff3.jpg', '/static/banff4.jpeg']
+      },
+      {
+        lat: 35.652832,
+        lng: 139.839478,
+        label: 'tokya, japan',
+        images: ['/static/tokyo1.jpg']
+      }
+  ];
+
+  destinations.forEach(dest => {
+    const marker = L.marker([dest.lat, dest.lng]).addTo(map);
+    let currentIndex = 0;
+    const popupContent = document.createElement('div');
+    popupContent.className = 'popup-carousel';
+
+    const image = document.createElement('img');
+    image.className = 'carousel-img';
+    image.src = dest.images[currentIndex];
+
+    const controls = document.createElement('div');
+    controls.className = 'carousel-controls';
+
+    const prevBtn = document.createElement('button');
+    prevBtn.innerText = '←';
+    const nextBtn = document.createElement('button');
+    nextBtn.innerText = '→';
+
+    prevBtn.onclick = () => {
+      currentIndex = (currentIndex - 1 + dest.images.length) % dest.images.length;
+      image.src = dest.images[currentIndex];
+    };
+    nextBtn.onclick = () => {
+      currentIndex = (currentIndex + 1) % dest.images.length;
+      image.src = dest.images[currentIndex];
+    };
+
+    controls.appendChild(prevBtn);
+    controls.appendChild(nextBtn);
+    popupContent.appendChild(image);
+    popupContent.appendChild(controls);
+    marker.bindPopup(popupContent);
+  });
+</script>
+
+</body>
+</html>
+
