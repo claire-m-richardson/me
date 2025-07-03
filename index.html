@@ -382,6 +382,21 @@
     </div>
   </div>
 </section>
+<section id="notion-access">
+  <h2 style="text-align:center;">Enter Password to View Dashboard</h2>
+  <div style="text-align:center;">
+    <input type="password" id="notion-password" placeholder="Enter password" />
+    <button onclick="checkPassword()">Submit</button>
+  </div>
+</section>
+
+<section id="private-notion" style="display: none; margin-top: 40px;">
+  <h2 style="text-align:center;">Personal Dashboard</h2>
+  <iframe 
+    src="https://www.notion.so/1f9d98711ffd80b4baadfb58cb881741?v=1f9d98711ffd8082a61d000c75aa62cb&p=1f9d98711ffd800fa2e8d7f389c358e3&pm=s" 
+    style="width: 100%; height: 800px; border: none;">
+  </iframe>
+</section>
 
 
 <div class="navbar">
@@ -540,6 +555,20 @@
     popupContent.appendChild(controls);
     marker.bindPopup(popupContent);
   });
+
+function checkPassword() {
+  const input = document.getElementById("notion-password").value;
+  const correctPassword = "claire123"; // ← change this to your own secret
+
+  if (input === correctPassword) {
+    document.getElementById("private-notion").style.display = "block";
+    document.getElementById("notion-access").style.display = "none";
+    window.scrollTo({ top: document.getElementById("private-notion").offsetTop, behavior: "smooth" });
+  } else {
+    alert("Incorrect password. Try again.");
+  }
+}
+
 </script>
 
 </body>
